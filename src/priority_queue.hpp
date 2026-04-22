@@ -42,11 +42,17 @@ private:
                 std::swap(a, b);
             }
         } catch (...) {
-            throw;
+            throw sjtu::runtime_error();
         }
 
         // Recursively merge
-        a->right = merge(a->right, b);
+        try {
+            a->right = merge(a->right, b);
+        } catch (...) {
+            // If merge fails, restore the right child
+            a->right = nullptr;
+            throw sjtu::runtime_error();
+        }
 
         // Maintain leftist property: left dist >= right dist
         if (getDist(a->left) < getDist(a->right)) {
@@ -130,7 +136,7 @@ public:
             ++queue_size;
         } catch (...) {
             delete new_node;
-            throw;
+            throw sjtu::runtime_error();
         }
     }
 
@@ -144,9 +150,15 @@ public:
         }
 
         Node* old_root = root;
-        root = merge(root->left, root->right);
-        delete old_root;
-        --queue_size;
+        try {
+            root = merge(root->left, root->right);
+            delete old_root;
+            --queue_size;
+        } catch (...) {
+            // If merge fails, restore the original root
+            root = old_root;
+            throw sjtu::runtime_error();
+        }
     }
 
 	/**
@@ -178,7 +190,7 @@ public:
             other.root = nullptr;
             other.queue_size = 0;
         } catch (...) {
-            throw;
+            throw sjtu::runtime_error();
         }
     }
 };
